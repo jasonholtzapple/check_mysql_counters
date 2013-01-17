@@ -28,7 +28,7 @@ to your pnp4nagios template directory - the default location is
 /usr/local/pnp4nagios/share/templates
 
 If you are using nrpe for your check, you will need to use a pnp4nagios
-custom template. See the documentation here for an example:
+custom template to see the graphs. See the documentation here for an example:
 
 http://docs.pnp4nagios.org/pnp-0.6/tpl_custom
 
