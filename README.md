@@ -27,10 +27,7 @@ Then copy the correct check_mysql_counters.php template from the directory
 to your pnp4nagios template directory - the default location is
 /usr/local/pnp4nagios/share/templates
 
-If you are using nrpe for your check, you will need to use a pnp4nagios
-custom template to see the graphs. See the documentation here for an example:
-
-http://docs.pnp4nagios.org/pnp-0.6/tpl_custom
+The plugin currently does not support being called by NRPE (the data returned is too large), a future version will address this.
 
 Requirements
 ============
