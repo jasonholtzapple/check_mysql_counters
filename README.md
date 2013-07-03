@@ -47,5 +47,5 @@ It has been tested with pnp4nagios 0.6
 Authors
 =======
 
-Jason Holtzapple - original plugin and templates
-Jesse Morgan - Oracle MySQL 5.6 support and various bug fixes
+* Jason Holtzapple - original plugin and templates
+* Jesse Morgan - Oracle MySQL 5.6 support and various bug fixes
