@@ -353,17 +353,28 @@ $opt[$num] = "--title \"$hostname - InnoDB Buffer Pool Activity\"";
 $def[$num] = rrd::def('innodb_pages_created', $RRDFILE[1], $DS[250], 'AVERAGE');
 $def[$num] .= rrd::def('innodb_pages_read', $RRDFILE[1], $DS[251], 'AVERAGE');
 $def[$num] .= rrd::def('innodb_pages_written', $RRDFILE[1], $DS[252], 'AVERAGE');
-$def[$num] .= rrd::cdef('innodb_pages_total','innodb_pages_created,innodb_pages_read,innodb_pages_written,+,+');
 $label = rrd::cut('Pages Created',25);
-$def[$num] .= rrd::area('innodb_pages_created','#FFAB00',$label,1);
+$def[$num] .= rrd::line1('innodb_pages_created','#D6883A',$label);
 $def[$num] .= rrd::gprint('innodb_pages_created',array('LAST','AVERAGE','MAX'),"%5.0lf");
 $label = rrd::cut('Pages Read',25);
-$def[$num] .= rrd::area('innodb_pages_read','#D8ACE0',$label,1);
+$def[$num] .= rrd::line1('innodb_pages_read','#E6D883',$label);
 $def[$num] .= rrd::gprint('innodb_pages_read',array('LAST','AVERAGE','MAX'),"%5.0lf");
 $label = rrd::cut('Pages Written',25);
-$def[$num] .= rrd::area('innodb_pages_written','#7CB3F1',$label,1);
+$def[$num] .= rrd::line1('innodb_pages_written','#55AD84',$label);
 $def[$num] .= rrd::gprint('innodb_pages_written',array('LAST','AVERAGE','MAX'),"%5.0lf");
-$def[$num] .= rrd::line1('innodb_pages_total','#145EA1');
+
+++$num;
+
+$ds_name[$num] = 'InnoDB Buffer Pool Efficiency';
+$opt[$num] = "--title \"$hostname - InnoDB Buffer Pool Efficiency\"";
+$def[$num] = rrd::def('innodb_buffer_pool_read_requests', $RRDFILE[1], $DS[197], 'AVERAGE');
+$def[$num] .= rrd::def('innodb_buffer_pool_reads', $RRDFILE[1], $DS[198], 'AVERAGE');
+$label = rrd::cut('Pool Read Requests',20);
+$def[$num] .= rrd::line1('innodb_buffer_pool_read_requests','#6EA100',$label);
+$def[$num] .= rrd::gprint('innodb_buffer_pool_read_requests',array('LAST','AVERAGE','MAX'),"%6.0lf");
+$label = rrd::cut('Pool Reads',20);
+$def[$num] .= rrd::line1('innodb_buffer_pool_reads','#AA3B27',$label);
+$def[$num] .= rrd::gprint('innodb_buffer_pool_reads',array('LAST','AVERAGE','MAX'),"%6.0lf");
 
 ++$num;
 
