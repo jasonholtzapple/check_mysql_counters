@@ -1,6 +1,6 @@
 <?php
 /*
-check_mysql_counters.php version 1.2.1
+check_mysql_counters.php version 1.4
 
 Licensed under the BSD simplified 2 clause license
 

@@ -1,10 +1,10 @@
 <?php
 /*
-check_mysql_counters.php version 1.2
+check_mysql_counters.php version 1.4
 
 Licensed under the BSD simplified 2 clause license
 
-Copyright (c) 2012, WebPT, LLC.
+Copyright (c) 2013, WebPT, LLC.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
