@@ -2,6 +2,10 @@
 ChangeLog
 ==============================================================================
 
+1.4.1 - Thu Sep 26 16:25:57 MST 2013
+
+Add Thread Running to 5.5 and 5.6 graphs
+
 1.4 - Fri Jul 26 15:19:45 MST 2013
 
 Add InnoDB Pool Efficiency graph. This is reads from memory versus disk.

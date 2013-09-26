@@ -1,6 +1,6 @@
 <?php
 /*
-check_mysql_counters.php version 1.4
+check_mysql_counters.php version 1.4.1
 
 Licensed under the BSD simplified 2 clause license
 
@@ -58,6 +58,7 @@ $def[$num] = rrd::def('max_connections', $RRDFILE[1], $DS[342], 'MAX');
 $def[$num] .= rrd::def('max_used', $RRDFILE[1], $DS[280], 'MAX');
 $def[$num] .= rrd::def('aborted_clients', $RRDFILE[1], $DS[1], 'AVERAGE');
 $def[$num] .= rrd::def('aborted_connects', $RRDFILE[1], $DS[2], 'AVERAGE');
+$def[$num] .= rrd::def('threads_running', $RRDFILE[1], $DS[337], 'AVERAGE');
 $def[$num] .= rrd::def('threads_connected', $RRDFILE[1], $DS[335], 'AVERAGE');
 $def[$num] .= rrd::def('new_connections', $RRDFILE[1], $DS[155], 'AVERAGE');
 $label = rrd::cut('Max Connections',23);
@@ -72,6 +73,9 @@ $def[$num] .= rrd::gprint('aborted_clients',array('LAST','AVERAGE','MAX'),"%4.0l
 $label = rrd::cut('Aborted Connects',23);
 $def[$num] .= rrd::line1('aborted_connects','#00FF00',$label,0);
 $def[$num] .= rrd::gprint('aborted_connects',array('LAST','AVERAGE','MAX'),"%4.0lf");
+$label = rrd::cut('Threads Running',23);
+$def[$num] .= rrd::line1('threads_running','#942D0C',$label,0);
+$def[$num] .= rrd::gprint('threads_running',array('LAST','AVERAGE','MAX'),"%4.0lf");
 $label = rrd::cut('Threads Connected',23);
 $def[$num] .= rrd::line1('threads_connected','#FF7D00',$label,0);
 $def[$num] .= rrd::gprint('threads_connected',array('LAST','AVERAGE','MAX'),"%4.0lf");
