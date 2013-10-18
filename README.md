@@ -7,7 +7,8 @@ show you performance trends in your MySQL servers.
 To use, copy check_mysql_counters to your nagios libexec directory if you
 are using MySQL 5.1, check_mysql_counters_55 if you are using MySQL 5.5,
 check_mysql_counters_56 if you are using MySQL 5.6,
-or check_mysql_counters_p55 if you are using Percona 5.5.
+check_mysql_counters_p55 if you are using Percona 5.5, or
+check_mysql_counterS_p56 if you are using Percona 5.6
 
 Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 
@@ -15,6 +16,7 @@ Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 * Oracle 5.5: check_mysql_counters_55 -H host -P port -u mysqluser -p mysqlpassword
 * Oracle 5.6: check_mysql_counters_56 -H host -P port -u mysqluser -p mysqlpassword
 * Percona 5.5: check_mysql_counters_p55 -H host -P port -u mysqluser -p mysqlpassword
+* Percona 5.6: check_mysql_counters_p56 -H host -P port -u mysqluser -p mysqlpassword
 
 As far as I know, the database user does not need any special privileges
 to gather statistics.
@@ -26,11 +28,12 @@ Then copy the correct check_mysql_counters.php template from the directory
 * oracle_5_5
 * oracle_5_6
 * percona_5_5
+* percona_5_6
 
 to your pnp4nagios template directory - the default location is
 /usr/local/pnp4nagios/share/templates
 
-The plugin currently does not support being called by NRPE (the data returned is too large), a future version will address this.
+The plugin currently does not support being called by NRPE (the data returned is too large), a future version might address this.
 
 Requirements
 ============
@@ -39,6 +42,7 @@ Requirements
 * MySQL 5.5 - untested
 * MySQL 5.6 - supported
 * Percona Server 5.5 - supported
+* Percona Server 5.6 - supported
 
 php/mysqli on your Nagios server for the plugin
 
