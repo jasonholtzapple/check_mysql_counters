@@ -4,12 +4,12 @@ ChangeLog
 
 1.4.1 - Thu Sep 26 16:25:57 MST 2013
 
-Add Thread Running to 5.5 and 5.6 graphs
+Add Threads Running to 5.5 and 5.6 graphs
 
 1.4 - Fri Jul 26 15:19:45 MST 2013
 
 Add InnoDB Pool Efficiency graph. This is reads from memory versus disk.
-Adjust colors in the InnoDB Buffer Pool Activity
+Adjust colors in the InnoDB Buffer Pool Activity graph
 
 1.3 - Wed Jul  3 13:36:14 MST 2013
 
