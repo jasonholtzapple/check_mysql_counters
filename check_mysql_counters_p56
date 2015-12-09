@@ -552,7 +552,7 @@ try {
         echo "UNKNOWN: Unsupported MySQL version (" . $version['VERSION'] . ")\n";
     }
 } catch (PDOException $e) {
-    echo $e->getMessage();
+    echo $e->getMessage(), "\n";
     $ret_val = $RET_UNK;
 }
 
