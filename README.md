@@ -18,9 +18,6 @@ Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 * Percona 5.5: check_mysql_counters_p55 -H host -P port -u mysqluser -p mysqlpassword
 * Percona 5.6: check_mysql_counters_p56 -H host -P port -u mysqluser -p mysqlpassword
 
-As far as I know, the database user does not need any special privileges
-to gather statistics.
-
 Then copy the correct check_mysql_counters.php template from the directory
 
 * oracle_5_1_with_innodb_plugin
@@ -44,9 +41,11 @@ Requirements
 * Percona Server 5.5 - supported
 * Percona Server 5.6 - supported
 
-php/mysqli on your Nagios server for the plugin
+php/mysqli on the server executing the plugin.
 
-It has been tested with pnp4nagios 0.6
+MySQL database user - no special privileges required.
+
+It has been tested with pnp4nagios 0.6.
 
 Authors
 =======
