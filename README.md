@@ -8,7 +8,7 @@ To use, copy check_mysql_counters to your nagios libexec directory if you
 are using MySQL 5.1, check_mysql_counters_55 if you are using MySQL 5.5,
 check_mysql_counters_56 if you are using MySQL 5.6,
 check_mysql_counters_p55 if you are using Percona 5.5, or
-check_mysql_counterS_p56 if you are using Percona 5.6
+check_mysql_counters_p56 if you are using Percona 5.6
 
 Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 
