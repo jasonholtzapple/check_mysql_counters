@@ -12,6 +12,7 @@ check_mysql_counters_p56 if you are using Percona 5.6
 
 Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 
+* CentOS6 MySQL 5.1 (mysql-server package): check_mysql_counters -H host -P port -u mysqluser -p mysqlpassword
 * Oracle 5.1: check_mysql_counters -H host -P port -u mysqluser -p mysqlpassword
 * Oracle 5.5: check_mysql_counters_55 -H host -P port -u mysqluser -p mysqlpassword
 * Oracle 5.6: check_mysql_counters_56 -H host -P port -u mysqluser -p mysqlpassword
@@ -20,6 +21,7 @@ Then create a MYSQL_COUNTERS nagios service that executes the plugin:
 
 Then copy the correct check_mysql_counters.php template from the directory
 
+* centos_5_1_mysql_5_1
 * oracle_5_1_with_innodb_plugin
 * oracle_5_1_without_innodb_plugin
 * oracle_5_5
@@ -52,3 +54,4 @@ Authors
 
 * Jason Holtzapple - original plugin and templates
 * Jesse Morgan - Oracle MySQL 5.6 support and various bug fixes
+* Kevin Pankonen - CentOS6 MySQL 5.1 (mysql-server) support
