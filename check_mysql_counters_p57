@@ -1,0 +1,606 @@
+#!/usr/bin/php
+<?php
+/*
+check_mysql_counters version 1.5
+
+Licensed under the BSD simplified 2 clause license
+
+Copyright (c) 2013, WebPT, LLC.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+check_mysql_counters - a Nagios plugin to capture interesting MySQL counters inspired by the Percona MySQL cacti templates
+Note that it is not a typical nagios plugin as it does not alert on thresholds (yet)
+Written by Jason Holtzapple - jason@bitflip.net
+
+*/
+
+/* constants */
+
+$SERVICE = 'MYSQL_COUNTERS';
+
+$RET_OK = 0;
+$RET_WARN = 1;
+$RET_CRIT = 2;
+$RET_UNK  = 3;
+
+/* variables */
+
+$ret_val = $RET_UNK;
+
+/* command line parsing */
+
+$options = getopt('H:P:p:u:');
+
+if(!isset($options['H']) || !isset($options['u'])) {
+     usage();
+}
+
+$hostname = $options['H'];
+if(isset($options['P'])) {
+    $port = $options['P'];
+} else {
+    $port = 3306;
+}
+$username = $options['u'];
+if(isset($options['p'])) {
+    $password = $options['p'];
+} else {
+    $password = '';
+}
+
+/* Sadly, a whitelist seems to be required so future graphs won't break
+*/
+
+$whitelist = array(
+    'Aborted_clients',
+    'Aborted_connects',
+    'Binlog_snapshot_file',
+    'Binlog_snapshot_position',
+    'Binlog_cache_disk_use',
+    'Binlog_cache_use',
+    'Binlog_stmt_cache_disk_use',
+    'Binlog_stmt_cache_use',
+    'Bytes_received',
+    'Bytes_sent',
+    'Com_admin_commands',
+    'Com_assign_to_keycache',
+    'Com_alter_db',
+    'Com_alter_db_upgrade',
+    'Com_alter_event',
+    'Com_alter_function',
+    'Com_alter_instance',
+    'Com_alter_procedure',
+    'Com_alter_server',
+    'Com_alter_table',
+    'Com_alter_tablespace',
+    'Com_alter_user',
+    'Com_analyze',
+    'Com_begin',
+    'Com_binlog',
+    'Com_call_procedure',
+    'Com_change_db',
+    'Com_change_master',
+    'Com_change_repl_filter',
+    'Com_check',
+    'Com_checksum',
+    'Com_commit',
+    'Com_create_compression_dictionary',
+    'Com_create_db',
+    'Com_create_event',
+    'Com_create_function',
+    'Com_create_index',
+    'Com_create_procedure',
+    'Com_create_server',
+    'Com_create_table',
+    'Com_create_trigger',
+    'Com_create_udf',
+    'Com_create_user',
+    'Com_create_view',
+    'Com_dealloc_sql',
+    'Com_delete',
+    'Com_delete_multi',
+    'Com_do',
+    'Com_drop_compression_dictionary',
+    'Com_drop_db',
+    'Com_drop_event',
+    'Com_drop_function',
+    'Com_drop_index',
+    'Com_drop_procedure',
+    'Com_drop_server',
+    'Com_drop_table',
+    'Com_drop_trigger',
+    'Com_drop_user',
+    'Com_drop_view',
+    'Com_empty_query',
+    'Com_execute_sql',
+    'Com_explain_other',
+    'Com_flush',
+    'Com_get_diagnostics',
+    'Com_grant',
+    'Com_ha_close',
+    'Com_ha_open',
+    'Com_ha_read',
+    'Com_help',
+    'Com_insert',
+    'Com_insert_select',
+    'Com_install_plugin',
+    'Com_kill',
+    'Com_load',
+    'Com_lock_tables',
+    'Com_lock_tables_for_backup',
+    'Com_lock_binlog_for_backup',
+    'Com_optimize',
+    'Com_preload_keys',
+    'Com_prepare_sql',
+    'Com_purge',
+    'Com_purge_before_date',
+    'Com_release_savepoint',
+    'Com_rename_table',
+    'Com_rename_user',
+    'Com_repair',
+    'Com_replace',
+    'Com_replace_select',
+    'Com_reset',
+    'Com_resignal',
+    'Com_revoke',
+    'Com_revoke_all',
+    'Com_rollback',
+    'Com_rollback_to_savepoint',
+    'Com_savepoint',
+    'Com_select',
+    'Com_set_option',
+    'Com_signal',
+    'Com_show_binlog_events',
+    'Com_show_binlogs',
+    'Com_show_charsets',
+    'Com_show_client_statistics',
+    'Com_show_collations',
+    'Com_show_create_db',
+    'Com_show_create_event',
+    'Com_show_create_func',
+    'Com_show_create_proc',
+    'Com_show_create_table',
+    'Com_show_create_trigger',
+    'Com_show_databases',
+    'Com_show_engine_logs',
+    'Com_show_engine_mutex',
+    'Com_show_engine_status',
+    'Com_show_events',
+    'Com_show_errors',
+    'Com_show_fields',
+    'Com_show_function_code',
+    'Com_show_function_status',
+    'Com_show_grants',
+    'Com_show_index_statistics',
+    'Com_show_keys',
+    'Com_show_master_status',
+    'Com_show_open_tables',
+    'Com_show_plugins',
+    'Com_show_privileges',
+    'Com_show_procedure_code',
+    'Com_show_procedure_status',
+    'Com_show_processlist',
+    'Com_show_profile',
+    'Com_show_profiles',
+    'Com_show_relaylog_events',
+    'Com_show_slave_hosts',
+    'Com_show_slave_status',
+    'Com_show_status',
+    'Com_show_storage_engines',
+    'Com_show_table_statistics',
+    'Com_show_table_status',
+    'Com_show_tables',
+    'Com_show_thread_statistics',
+    'Com_show_triggers',
+    'Com_show_user_statistics',
+    'Com_show_variables',
+    'Com_show_warnings',
+    'Com_show_create_user',
+    'Com_shutdown',
+    'Com_slave_start',
+    'Com_slave_stop',
+    'Com_group_replication_start',
+    'Com_group_replication_stop',
+    'Com_stmt_execute',
+    'Com_stmt_close',
+    'Com_stmt_fetch',
+    'Com_stmt_prepare',
+    'Com_stmt_reset',
+    'Com_stmt_send_long_data',
+    'Com_truncate',
+    'Com_uninstall_plugin',
+    'Com_unlock_binlog',
+    'Com_unlock_tables',
+    'Com_update',
+    'Com_update_multi',
+    'Com_xa_commit',
+    'Com_xa_end',
+    'Com_xa_prepare',
+    'Com_xa_recover',
+    'Com_xa_rollback',
+    'Com_xa_start',
+    'Com_stmt_reprepare',
+    'Connection_errors_accept',
+    'Connection_errors_internal',
+    'Connection_errors_max_connections',
+    'Connection_errors_peer_address',
+    'Connection_errors_select',
+    'Connection_errors_tcpwrap',
+    'Connections',
+    'Created_tmp_disk_tables',
+    'Created_tmp_files',
+    'Created_tmp_tables',
+    'Delayed_errors',
+    'Delayed_insert_threads',
+    'Delayed_writes',
+    'Flush_commands',
+    'Handler_commit',
+    'Handler_delete',
+    'Handler_discover',
+    'Handler_external_lock',
+    'Handler_mrr_init',
+    'Handler_prepare',
+    'Handler_read_first',
+    'Handler_read_key',
+    'Handler_read_last',
+    'Handler_read_next',
+    'Handler_read_prev',
+    'Handler_read_rnd',
+    'Handler_read_rnd_next',
+    'Handler_rollback',
+    'Handler_savepoint',
+    'Handler_savepoint_rollback',
+    'Handler_update',
+    'Handler_write',
+    'Innodb_background_log_sync',
+    'Innodb_buffer_pool_dump_status',
+    'Innodb_buffer_pool_load_status',
+    'Innodb_buffer_pool_resize_status',
+    'Innodb_buffer_pool_pages_data',
+    'Innodb_buffer_pool_bytes_data',
+    'Innodb_buffer_pool_pages_dirty',
+    'Innodb_buffer_pool_bytes_dirty',
+    'Innodb_buffer_pool_pages_flushed',
+    'Innodb_buffer_pool_pages_free',
+    'Innodb_buffer_pool_pages_LRU_flushed',
+    'Innodb_buffer_pool_pages_made_not_young',
+    'Innodb_buffer_pool_pages_made_young',
+    'Innodb_buffer_pool_pages_misc',
+    'Innodb_buffer_pool_pages_old',
+    'Innodb_buffer_pool_pages_total',
+    'Innodb_buffer_pool_read_ahead_rnd',
+    'Innodb_buffer_pool_read_ahead',
+    'Innodb_buffer_pool_read_ahead_evicted',
+    'Innodb_buffer_pool_read_requests',
+    'Innodb_buffer_pool_reads',
+    'Innodb_buffer_pool_wait_free',
+    'Innodb_buffer_pool_write_requests',
+    'Innodb_checkpoint_age',
+    'Innodb_checkpoint_max_age',
+    'Innodb_data_fsyncs',
+    'Innodb_data_pending_fsyncs',
+    'Innodb_data_pending_reads',
+    'Innodb_data_pending_writes',
+    'Innodb_data_read',
+    'Innodb_data_reads',
+    'Innodb_data_writes',
+    'Innodb_data_written',
+    'Innodb_dblwr_pages_written',
+    'Innodb_dblwr_writes',
+    'Innodb_ibuf_free_list',
+    'Innodb_ibuf_segment_size',
+    'Innodb_log_waits',
+    'Innodb_log_write_requests',
+    'Innodb_log_writes',
+    'Innodb_lsn_current',
+    'Innodb_lsn_flushed',
+    'Innodb_lsn_last_checkpoint',
+    'Innodb_master_thread_active_loops',
+    'Innodb_master_thread_idle_loops',
+    'Innodb_max_trx_id',
+    'Innodb_mem_adaptive_hash',
+    'Innodb_mem_dictionary',
+    'Innodb_oldest_view_low_limit_trx_id',
+    'Innodb_os_log_fsyncs',
+    'Innodb_os_log_pending_fsyncs',
+    'Innodb_os_log_pending_writes',
+    'Innodb_os_log_written',
+    'Innodb_page_size',
+    'Innodb_pages_created',
+    'Innodb_pages_read',
+    'Innodb_pages_written',
+    'Innodb_purge_trx_id',
+    'Innodb_purge_undo_no',
+    'Innodb_row_lock_current_waits',
+    'Innodb_row_lock_time',
+    'Innodb_row_lock_time_avg',
+    'Innodb_row_lock_time_max',
+    'Innodb_row_lock_waits',
+    'Innodb_rows_deleted',
+    'Innodb_rows_inserted',
+    'Innodb_rows_read',
+    'Innodb_rows_updated',
+    'Innodb_num_open_files',
+    'Innodb_truncated_status_writes',
+    'Innodb_available_undo_logs',
+    'Innodb_secondary_index_triggered_cluster_reads',
+    'Innodb_secondary_index_triggered_cluster_reads_avoided',
+    'Innodb_buffered_aio_submitted',
+    'Innodb_scan_pages_contiguous',
+    'Innodb_scan_pages_disjointed',
+    'Innodb_scan_pages_total_seek_distance',
+    'Innodb_scan_data_size',
+    'Innodb_scan_deleted_recs_size',
+    'Key_blocks_not_flushed',
+    'Key_blocks_unused',
+    'Key_blocks_used',
+    'Key_read_requests',
+    'Key_reads',
+    'Key_write_requests',
+    'Key_writes',
+    'Locked_connects',
+    'Max_execution_time_exceeded',
+    'Max_execution_time_set',
+    'Max_execution_time_set_failed',
+    'Max_used_connections',
+    'Max_used_connections_time',
+    'Not_flushed_delayed_rows',
+    'Ongoing_anonymous_transaction_count',
+    'Open_files',
+    'Open_streams',
+    'Open_table_definitions',
+    'Open_tables',
+    'Opened_files',
+    'Opened_table_definitions',
+    'Opened_tables',
+    'Performance_schema_accounts_lost',
+    'Performance_schema_cond_classes_lost',
+    'Performance_schema_cond_instances_lost',
+    'Performance_schema_digest_lost',
+    'Performance_schema_file_classes_lost',
+    'Performance_schema_file_handles_lost',
+    'Performance_schema_file_instances_lost',
+    'Performance_schema_hosts_lost',
+    'Performance_schema_index_stat_lost',
+    'Performance_schema_locker_lost',
+    'Performance_schema_memory_classes_lost',
+    'Performance_schema_metadata_lock_lost',
+    'Performance_schema_mutex_classes_lost',
+    'Performance_schema_mutex_instances_lost',
+    'Performance_schema_nested_statement_lost',
+    'Performance_schema_prepared_statements_lost',
+    'Performance_schema_program_lost',
+    'Performance_schema_rwlock_classes_lost',
+    'Performance_schema_rwlock_instances_lost',
+    'Performance_schema_session_connect_attrs_lost',
+    'Performance_schema_socket_classes_lost',
+    'Performance_schema_socket_instances_lost',
+    'Performance_schema_stage_classes_lost',
+    'Performance_schema_statement_classes_lost',
+    'Performance_schema_table_handles_lost',
+    'Performance_schema_table_instances_lost',
+    'Performance_schema_table_lock_stat_lost',
+    'Performance_schema_thread_classes_lost',
+    'Performance_schema_thread_instances_lost',
+    'Performance_schema_users_lost',
+    'Prepared_stmt_count',
+    'Qcache_free_blocks',
+    'Qcache_free_memory',
+    'Qcache_hits',
+    'Qcache_inserts',
+    'Qcache_lowmem_prunes',
+    'Qcache_not_cached',
+    'Qcache_queries_in_cache',
+    'Qcache_total_blocks',
+    'Queries',
+    'Questions',
+    'Rsa_public_key',
+    'Select_full_join',
+    'Select_full_range_join',
+    'Select_range',
+    'Select_range_check',
+    'Select_scan',
+    'Slave_open_temp_tables',
+    'Slow_launch_threads',
+    'Slow_queries',
+    'Sort_merge_passes',
+    'Sort_range',
+    'Sort_rows',
+    'Sort_scan',
+    'Ssl_accept_renegotiates',
+    'Ssl_accepts',
+    'Ssl_callback_cache_hits',
+    'Ssl_cipher',
+    'Ssl_cipher_list',
+    'Ssl_client_connects',
+    'Ssl_connect_renegotiates',
+    'Ssl_ctx_verify_depth',
+    'Ssl_ctx_verify_mode',
+    'Ssl_default_timeout',
+    'Ssl_finished_accepts',
+    'Ssl_finished_connects',
+    'Ssl_server_not_after',
+    'Ssl_server_not_before',
+    'Ssl_session_cache_hits',
+    'Ssl_session_cache_misses',
+    'Ssl_session_cache_mode',
+    'Ssl_session_cache_overflows',
+    'Ssl_session_cache_size',
+    'Ssl_session_cache_timeouts',
+    'Ssl_sessions_reused',
+    'Ssl_used_session_cache_entries',
+    'Ssl_verify_depth',
+    'Ssl_verify_mode',
+    'Ssl_version',
+    'Table_locks_immediate',
+    'Table_locks_waited',
+    'Table_open_cache_hits',
+    'Table_open_cache_misses',
+    'Table_open_cache_overflows',
+    'Tc_log_max_pages_used',
+    'Tc_log_page_size',
+    'Tc_log_page_waits',
+    'Threadpool_idle_threads',
+    'Threadpool_threads',
+    'Threads_cached',
+    'Threads_connected',
+    'Threads_created',
+    'Threads_running',
+    'Uptime',
+    'Uptime_since_flush_status',
+    'max_connections',
+    'query_cache_size',
+    'table_open_cache',
+);
+
+/* The script is not interested in these values */
+
+$remove = array (
+    'Compression',
+    'Innodb_buffer_pool_dump_status',
+    'Innodb_buffer_pool_load_status',
+    'Innodb_have_atomic_builtins',
+    'Innodb_page_size',
+    'Slave_last_heartbeat',
+    'Slave_running',
+    'Ssl_accept_renegotiates',
+    'Ssl_accepts',
+    'Ssl_callback_cache_hits',
+    'Ssl_cipher',
+    'Ssl_cipher_list',
+    'Ssl_client_connects',
+    'Ssl_connect_renegotiates',
+    'Ssl_ctx_verify_depth',
+    'Ssl_ctx_verify_mode',
+    'Ssl_default_timeout',
+    'Ssl_finished_accepts',
+    'Ssl_finished_connects',
+    'Ssl_server_not_after',
+    'Ssl_server_not_before',
+    'Ssl_session_cache_hits',
+    'Ssl_session_cache_misses',
+    'Ssl_session_cache_mode',
+    'Ssl_session_cache_overflows',
+    'Ssl_session_cache_size',
+    'Ssl_session_cache_timeouts',
+    'Ssl_sessions_reused',
+    'Ssl_used_session_cache_entries',
+    'Ssl_verify_depth',
+    'Ssl_verify_mode',
+    'Ssl_version',
+);
+
+/* These values are in milliseconds */ 
+
+$ms = array (
+    'Innodb_row_lock_time',
+    'Innodb_row_lock_time_avg',
+    'Innodb_row_lock_time_max',
+);
+
+/* These values are in bytes */
+
+$bytes = array (
+    'Bytes_received',
+    'Bytes_sent',
+    'Innodb_data_written',
+    'Innodb_os_log_written',
+    'query_cache_size',
+);
+
+/* These values are not incrementing counters */
+
+$not_counter = array (
+    'Innodb_available_undo_logs',
+    'Innodb_buffer_pool_bytes_data',
+    'Innodb_buffer_pool_bytes_dirty',
+    'Innodb_buffer_pool_pages_data',
+    'Innodb_buffer_pool_pages_dirty',
+    'Innodb_buffer_pool_pages_flushed',
+    'Innodb_buffer_pool_pages_free',
+    'Innodb_buffer_pool_pages_misc',
+    'Innodb_buffer_pool_pages_total',
+    'max_connections',
+    'Max_used_connections',
+    'Open_files',
+    'Open_tables',
+    'Open_streams',
+    'Open_table_definitions',
+    'Prepared_stmt_count',
+    'Qcache_free_blocks',
+    'Qcache_free_memory',
+    'Qcache_queries_in_cache',
+    'Qcache_total_blocks',
+    'Slave_open_temp_tables',
+    'table_open_cache',
+    'Threads_cached',
+    'Threads_connected',
+    'Threads_running',
+);
+
+try {
+    $db = new PDO("mysql:host=$hostname;port=$port;dbname=performance_schema", $username, $password);
+    $sql = "SELECT VARIABLE_NAME, VARIABLE_VALUE FROM global_variables WHERE VARIABLE_NAME = 'version' OR VARIABLE_NAME = 'version_comment'";
+    foreach ($db->query($sql) as $row) {
+        $version[$row['VARIABLE_NAME']] = $row['VARIABLE_VALUE'];
+    }
+
+    if ((preg_match("/^5\.7\./", $version['version']) and (preg_match("/percona/i", $version['version_comment'])))) {
+        foreach ($sql = $db->query('show global status') as $row) {
+            $c[$row['Variable_name']] = $row['Value'];
+        }
+
+        $sql = "SELECT VARIABLE_NAME, VARIABLE_VALUE FROM global_variables WHERE VARIABLE_NAME = 'max_connections' OR VARIABLE_NAME='query_cache_size' OR VARIABLE_NAME='table_open_cache' ORDER BY VARIABLE_NAME";
+        foreach ($db->query($sql) as $row) {
+            $c[$row['VARIABLE_NAME']] = $row['VARIABLE_VALUE'];
+        }
+        $ret_val = $RET_OK;
+    } else {
+        echo "UNKNOWN: Unsupported MySQL version (" . $version['version'] . ")\n";
+    }
+} catch (PDOException $e) {
+    echo $e->getMessage(), "\n";
+    $ret_val = $RET_UNK;
+}
+
+if ($ret_val == $RET_OK) {
+    /* compute intersections */
+    $arrWhite = array_intersect_key($c,array_flip($whitelist));
+    $arrKeep = array_intersect_key($arrWhite, array_combine($arrDiff = array_values(array_diff(array_keys($arrWhite), $remove)), $arrDiff));
+    
+    foreach ($arrKeep as $k => $v) {
+        $arrKeep[$k] = intval($arrKeep[$k]);
+        if (in_array($k, $bytes)) {
+            $arrKeep[$k] .= 'B';
+        } elseif (in_array($k, $ms)) {
+            $arrKeep[$k] .= 'ms';
+        } elseif (in_array($k, $not_counter)) {
+        } else {
+            $arrKeep[$k] .= 'c';
+        }
+    }
+
+    print "$SERVICE OK | ";
+    foreach ($arrKeep as $k => $v) {
+        print "'$k'=$v ";
+    }
+    print "\n";
+    
+}
+
+exit($ret_val);
+
+function usage () {
+    global $RET_UNK;
+    echo "UNKNOWN: usage: check_mysql_counters -H host -P port -u mysqluser -p mysqlpassword\n";
+    exit($RET_UNK);
+}
+?>
