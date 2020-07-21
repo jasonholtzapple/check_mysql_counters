@@ -4,12 +4,12 @@ check_mysql_counters
 check_mysql_counters is a nagios plugin and pnp4nagios template designed to
 show you performance trends in your MySQL servers.
 
-To use, copy the appropriate check to your nagios libexec directory:
-MySQL 5.1 -> check_mysql_counters
-MySQL 5.5 -> check_mysql_counters_55
-MySQL 5.6 -> -> check_mysql_counters_56
-Percona MySQL 5.5 -> check_mysql_counters_p55
-Percona MySQL 5.6 -> check_mysql_counters_p56
+To use, copy the appropriate check to your nagios libexec directory:  
+MySQL 5.1 -> check_mysql_counters  
+MySQL 5.5 -> check_mysql_counters_55  
+MySQL 5.6 -> -> check_mysql_counters_56  
+Percona MySQL 5.5 -> check_mysql_counters_p55  
+Percona MySQL 5.6 -> check_mysql_counters_p56  
 Percona MySQL 5.7 -> check_mysql_counters_p57
 
 Then create a MYSQL_COUNTERS nagios service that executes the plugin:
